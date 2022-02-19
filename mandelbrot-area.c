@@ -1,4 +1,4 @@
-#define dwellLimit 16384
+#define dwellLimit 25000
 #define updateInvl 25000000
 
 #include <math.h>
@@ -40,21 +40,12 @@ char membership(double re, double im) {
     double cRe = re, cIm = im;
     double pRe, pIm;
 
-    // double rValues[dwellLimit];
-    // double iValues[dwellLimit];
-
     // return bool flag (5 bits), undeci, notmem, member
     for (unsigned long i = 0; i < dwellLimit; i++) {
-        // if (re * re + im * im > 4.0) return NOT_A_MEMBER;
+        if (re * re + im * im > 4.0) return NOT_A_MEMBER;
         if (re != re || im != im) return NOT_A_MEMBER; //NaN
         if (pRe == re && pIm == im) return MEMBER; //convergence
         if (cRe == re && cIm == im) return MEMBER; // cyclic
-
-        // rValues[i] = re;
-        // iValues[i] = im;
-
-        // for (unsigned long j = 0; j < i; j++)
-        //     if (re == rValues[j] && im == iValues[j]) return MEMBER;
 
         pRe = re;
         pIm = im;
@@ -75,18 +66,18 @@ int main() {
 
     const unsigned long startTime = time(NULL);
 
-    for (uint64_t sc = 0; sc < ULLONG_MAX; sc++) {
+    while(1) {
         char memdat = membership(_22(xorshift128plus()), _22(xorshift128plus()));
         member += memdat == MEMBER;
         notmem += memdat == NOT_A_MEMBER;
         undeci += memdat == UNDECIDED;
         tested++;
 
-        if (sc % updateInvl == 0) {
-            printf("UPDATE AT %llu\n", sc);
+        if (tested % updateInvl == 0) {
+            printf("UPDATE AT %llu\n", tested);
             printf("total time:          %llu\n", time(NULL) - startTime);
             printf("times:               %llu %llu\n", startTime, time(NULL));
-            printf("rate:                %lf\n", (double)sc / (double)(time(NULL) - startTime));
+            printf("rate:                %lf\n", (double)tested / (double)(time(NULL) - startTime));
             printf("total member:        %llu\n", member);
             printf("total non-member:    %llu\n", notmem);
             printf("total undecided:     %llu\n", undeci);
