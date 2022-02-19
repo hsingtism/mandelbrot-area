@@ -1,4 +1,5 @@
-#define dwellLimit 32768
+#define dwellLimit 16384
+#define updateInvl 25000000
 
 #include <math.h>
 #include <stdint.h>
@@ -25,34 +26,35 @@ uint64_t xorshift128plus() {
     return state0 + state1;
 }
 
-// https://stackoverflow.com/a/64699231/
 double _22(uint64_t i) {
     uint64_t u64 = 0x3FF0000000000000ULL | ((i >> 12) | 1);
     double fmanu = *(double*)&u64 - 1.0;
-    return (fmanu - (double)(i & 1)) * 2;
+    return fmanu * 4 - 2; // TODO make percision full 52 bits
 }
 
 char membership(double re, double im) {
+    if (re < -2.0 || re > 0.49) return NOT_A_MEMBER;
+    if (im < -1.15 || im > 1.15 ) return NOT_A_MEMBER;
     if (re * re + im * im > 4.0) return NOT_A_MEMBER;
-    // if (im < -2.0 || im )
 
     double cRe = re, cIm = im;
     double pRe, pIm;
 
-    double rValues[dwellLimit];
-    double iValues[dwellLimit];
+    // double rValues[dwellLimit];
+    // double iValues[dwellLimit];
 
     // return bool flag (5 bits), undeci, notmem, member
     for (unsigned long i = 0; i < dwellLimit; i++) {
-        if (re * re + im * im > 4.0) return NOT_A_MEMBER;
+        // if (re * re + im * im > 4.0) return NOT_A_MEMBER;
         if (re != re || im != im) return NOT_A_MEMBER; //NaN
-        if (pRe == re && pIm == im) return MEMBER;
+        if (pRe == re && pIm == im) return MEMBER; //convergence
+        if (cRe == re && cIm == im) return MEMBER; // cyclic
 
-        rValues[i] = re;
-        iValues[i] = im;
+        // rValues[i] = re;
+        // iValues[i] = im;
 
-        for (unsigned long j = 0; j < i; j++)
-            if (re == rValues[j] && im == iValues[j]) return MEMBER;
+        // for (unsigned long j = 0; j < i; j++)
+        //     if (re == rValues[j] && im == iValues[j]) return MEMBER;
 
         pRe = re;
         pIm = im;
@@ -64,8 +66,9 @@ char membership(double re, double im) {
 }
 
 int main() {
-    // get the prng well mixed up
-    for (int i = 0; i < 10; i++) 
+    state0 = time(NULL);
+    state1 = time(NULL) ^ rand();
+    for (int i = 0; i < 8192; i++) 
         xorshift128plus();
 
     uint64_t member = 0, notmem = 0, undeci = 0, tested = 0;
@@ -79,7 +82,7 @@ int main() {
         undeci += memdat == UNDECIDED;
         tested++;
 
-        if (sc % 25000 == 0) {
+        if (sc % updateInvl == 0) {
             printf("UPDATE AT %llu\n", sc);
             printf("total time:          %llu\n", time(NULL) - startTime);
             printf("times:               %llu %llu\n", startTime, time(NULL));
@@ -87,7 +90,7 @@ int main() {
             printf("total member:        %llu\n", member);
             printf("total non-member:    %llu\n", notmem);
             printf("total undecided:     %llu\n", undeci);
-            printf("total actual tested: %llu, %llu\n", tested, member + notmem + undeci);
+            printf("total actual tested: %llu, %llu\n", tested, member + notmem + undeci, tested);
             printf("estimated area H:    %lf\n", (double)(member + undeci) / tested * 16);
             printf("estimated area L:    %lf\n", (double)(member - undeci) / tested * 16);
             printf("\n");
