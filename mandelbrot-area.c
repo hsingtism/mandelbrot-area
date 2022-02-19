@@ -1,4 +1,4 @@
-#define dwellLimit 1000
+#define dwellLimit 32768
 
 #include <math.h>
 #include <stdint.h>
@@ -33,15 +33,8 @@ double _22(uint64_t i) {
 }
 
 char membership(double re, double im) {
-    // main cardoid test: (\left(x-0.25\right)^{2}+y^{2}+0.5\left(x-0.25\right))^{2}<0.25(\left(x-0.25\right)^{2}+y^{2})
-    // double cX = re - 0.25;
-    // if (pow((cX * cX + im * im + 0.5 * cX), 2) < 0.25 * (cX * cX + im * im)) {
-    //     return MEMBER;
-    // }
-    // main bulb
-    // if (pow((re + 0.25), 2) + im * im < 0.25) {
-    //     return MEMBER;
-    // }
+    if (re * re + im * im > 4.0) return NOT_A_MEMBER;
+    // if (im < -2.0 || im )
 
     double cRe = re, cIm = im;
     double pRe, pIm;
@@ -51,20 +44,20 @@ char membership(double re, double im) {
 
     // return bool flag (5 bits), undeci, notmem, member
     for (unsigned long i = 0; i < dwellLimit; i++) {
+        if (re * re + im * im > 4.0) return NOT_A_MEMBER;
         if (re != re || im != im) return NOT_A_MEMBER; //NaN
-        // if (re * re + im * im > 4.0) return NOT_A_MEMBER;
-        // if (pRe == re && pIm == im) return MEMBER;
+        if (pRe == re && pIm == im) return MEMBER;
 
-        // rValues[i] = re;
-        // iValues[i] = im;
+        rValues[i] = re;
+        iValues[i] = im;
 
-        // for (unsigned long j = i; j >= 0; j--)
-        //     if (re == rValues[j] && im == iValues[j]) return MEMBER;
+        for (unsigned long j = 0; j < i; j++)
+            if (re == rValues[j] && im == iValues[j]) return MEMBER;
 
         pRe = re;
         pIm = im;
         // iterate
-        re = re * re - im + cRe;
+        re = (re + im) * (re - im) + cRe;
         im = 2 * pRe * im + cIm;
     }
     return UNDECIDED;
@@ -81,12 +74,12 @@ int main() {
 
     for (uint64_t sc = 0; sc < ULLONG_MAX; sc++) {
         char memdat = membership(_22(xorshift128plus()), _22(xorshift128plus()));
-        member += memdat & MEMBER;
-        notmem += memdat & NOT_A_MEMBER >> 1;
-        undeci += memdat & UNDECIDED >> 2;
+        member += memdat == MEMBER;
+        notmem += memdat == NOT_A_MEMBER;
+        undeci += memdat == UNDECIDED;
         tested++;
 
-        if (sc % 16777216 == 0) {
+        if (sc % 25000 == 0) {
             printf("UPDATE AT %llu\n", sc);
             printf("total time:          %llu\n", time(NULL) - startTime);
             printf("times:               %llu %llu\n", startTime, time(NULL));
