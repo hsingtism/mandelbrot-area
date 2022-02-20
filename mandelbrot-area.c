@@ -1,5 +1,6 @@
 #define dwellLimit 25000
 #define updateInvl 200000
+#define S_SEED 0x0000000000000000
 
 #include <math.h>
 #include <stdint.h>
@@ -54,7 +55,8 @@ char membership(double re, double im) {
         re = (re + im) * (re - im) + cRe;
         im = 2 * pRe * im + cIm;
 
-        if (cRe == re && cIm == im) return MEMBER;  // cyclic
+        if (cRe == re && cIm == im) return MEMBER;  // cyclic 
+        // TODO orbit detection
         // if (i == 128) inRe = re, inIm = im, floatsCalmedDown = 1;
         // if (floatsCalmedDown) {
         //     if (inRe == re && inIm == im) return MEMBER;
@@ -65,7 +67,7 @@ char membership(double re, double im) {
 
 int main() {
     state0 = time(NULL);
-    state1 = time(NULL) ^ rand();
+    state1 = time(NULL) ^ S_SEED;
     for (int i = 0; i < 8192; i++) 
         xorshift128plus();
 
@@ -82,13 +84,13 @@ int main() {
 
         if (tested % updateInvl == 0) {
             printf("UPDATE AT %llu\n", tested);
-            printf("total time:          %llu\n", time(NULL) - startTime);
             printf("times:               %llu %llu\n", startTime, time(NULL));
-            printf("rate:                %lf\n", (double)tested / (double)(time(NULL) - startTime));
+            printf("total time:          %llu\n", time(NULL) - startTime);
             printf("total member:        %llu\n", member);
             printf("total non-member:    %llu\n", notmem);
             printf("total undecided:     %llu\n", undeci);
             printf("total actual tested: %llu, %llu\n", tested, member + notmem + undeci, tested);
+            printf("rate:                %lf\n", (double)tested / (double)(time(NULL) - startTime));
             printf("estimated area H:    %lf\n", (double)(member + undeci) / tested * 16);
             printf("estimated area L:    %lf\n", (double)(member - undeci) / tested * 16);
             printf("\n");
