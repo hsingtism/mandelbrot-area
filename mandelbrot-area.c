@@ -75,6 +75,11 @@ int main() {
 
     const unsigned long startTime = time(NULL);
 
+    FILE *fp;
+    fp = fopen("log.txt", "a");
+    fprintf(fp, "instance %lu started\ntimestamp, instance, member, not member, undecided\n", startTime);
+    fclose(fp);
+
     while(1) {
         char memdat = membership(_22(xorshift128plus()), _22(xorshift128plus()));
         member += memdat == MEMBER;
@@ -94,6 +99,11 @@ int main() {
             printf("estimated area H:    %lf\n", (double)(member + undeci) / tested * 16);
             printf("estimated area L:    %lf\n", (double)(member - undeci) / tested * 16);
             printf("\n");
+
+            FILE *fp;
+            fp = fopen("log.txt", "a");
+            fprintf(fp, "%lu, %lu, %llu, %llu, %llu\n", (unsigned long)time(NULL), startTime, member, notmem, undeci);
+            fclose(fp);
         }
     }
 
