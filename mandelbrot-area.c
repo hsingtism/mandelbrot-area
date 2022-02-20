@@ -1,5 +1,5 @@
-#define dwellLimit 25000
-#define updateInvl 200000
+#define dwellLimit 16777216
+#define updateInvl 1048576
 #define S_SEED 0x0000000000000000
 
 #include <math.h>
@@ -41,9 +41,9 @@ char membership(double re, double im) {
     double cRe = re, cIm = im;
     double inRe, inIm;
     double pRe, pIm;
-    char floatsCalmedDown = 0;
+    double obRe = re, obIm = im;
+    double pobRe;
 
-    // return bool flag (5 bits), undeci, notmem, member
     for (unsigned long i = 0; i < dwellLimit; i++) {
         if (re * re + im * im > 4.0) return NOT_A_MEMBER;
         if (re != re || im != im) return NOT_A_MEMBER; //NaN
@@ -56,11 +56,13 @@ char membership(double re, double im) {
         im = 2 * pRe * im + cIm;
 
         if (cRe == re && cIm == im) return MEMBER;  // cyclic 
-        // TODO orbit detection
-        // if (i == 128) inRe = re, inIm = im, floatsCalmedDown = 1;
-        // if (floatsCalmedDown) {
-        //     if (inRe == re && inIm == im) return MEMBER;
-        // }
+
+        if (i % 2) { // TODO optimize this
+            pobRe = obRe;
+            obRe = (obRe + obIm) * (obRe - obIm) + cRe;
+            obIm = 2 * pobRe * obIm + cIm;
+            if (obRe == re && obIm == im) return MEMBER;
+        }
     }
     return UNDECIDED;
 }
