@@ -7,7 +7,7 @@ function printComplex(n) {
 }
 
 const addComplex = (a, b) => [a[0] + b[0], a[1] + b[1]]
-const squareComplex = (a) => [a[0] * a[0] - a[1], 2 * a[0] * a[1]]
+const squareComplex = (a) => [a[0] * a[0] - a[1] * a[1], 2 * a[0] * a[1]]
 const absComplex = (a) => Math.sqrt(a[0] * a[0] + a[1] * a[1])
 
 let z = [0, 0]

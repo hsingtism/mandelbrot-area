@@ -1,5 +1,5 @@
 #define dwellLimit 25000
-#define updateInvl 25000000
+#define updateInvl 200000
 
 #include <math.h>
 #include <stdint.h>
@@ -38,20 +38,27 @@ char membership(double re, double im) {
     if (re * re + im * im > 4.0) return NOT_A_MEMBER;
 
     double cRe = re, cIm = im;
+    double inRe, inIm;
     double pRe, pIm;
+    char floatsCalmedDown = 0;
 
     // return bool flag (5 bits), undeci, notmem, member
     for (unsigned long i = 0; i < dwellLimit; i++) {
         if (re * re + im * im > 4.0) return NOT_A_MEMBER;
         if (re != re || im != im) return NOT_A_MEMBER; //NaN
-        if (pRe == re && pIm == im) return MEMBER; //convergence
-        if (cRe == re && cIm == im) return MEMBER; // cyclic
+        if (pRe == re && pIm == im) return MEMBER;  // convergence
 
         pRe = re;
         pIm = im;
         // iterate
         re = (re + im) * (re - im) + cRe;
         im = 2 * pRe * im + cIm;
+
+        if (cRe == re && cIm == im) return MEMBER;  // cyclic
+        // if (i == 128) inRe = re, inIm = im, floatsCalmedDown = 1;
+        // if (floatsCalmedDown) {
+        //     if (inRe == re && inIm == im) return MEMBER;
+        // }
     }
     return UNDECIDED;
 }
