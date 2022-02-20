@@ -1,6 +1,7 @@
 #define dwellLimit 16777216
 #define updateInvl 1048576
 #define S_SEED 0x0000000000000000
+#define FILE_OUTPUT 0
 
 #include <math.h>
 #include <stdint.h>
@@ -80,6 +81,7 @@ int main() {
     FILE *fp;
     fp = fopen("log.txt", "a");
     fprintf(fp, "instance %lu started\ntimestamp, instance, member, not member, undecided\n", startTime);
+    if (FILE_OUTPUT == 0) fprintf(fp, "file output disabled.\n");
     fclose(fp);
 
     while(1) {
@@ -102,6 +104,7 @@ int main() {
             printf("estimated area L:    %lf\n", (double)(member - undeci) / tested * 16);
             printf("\n");
 
+            if (FILE_OUTPUT == 0) continue;
             FILE *fp;
             fp = fopen("log.txt", "a");
             fprintf(fp, "%lu, %lu, %llu, %llu, %llu\n", (unsigned long)time(NULL), startTime, member, notmem, undeci);
