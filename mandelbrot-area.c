@@ -1,7 +1,7 @@
-#define dwellLimit 16777216
-#define updateInvl 1048576
-#define S_SEED 0x0000000000000000
-#define FILE_OUTPUT 0
+#define dwellLimit 1073741824
+#define updateInvl 67108864
+#define S_SEED 0xade5323c6e74d2fe
+#define FILE_OUTPUT 1
 
 #include <math.h>
 #include <stdint.h>
@@ -39,11 +39,9 @@ char membership(double re, double im) {
     if (im < -1.15 || im > 1.15 ) return NOT_A_MEMBER;
     if (re * re + im * im > 4.0) return NOT_A_MEMBER;
 
-    double cRe = re, cIm = im;
-    double inRe, inIm;
-    double pRe, pIm;
+    const double cRe = re, cIm = im;
+    double inRe, inIm, pRe, pIm, pobRe;
     double obRe = re, obIm = im;
-    double pobRe;
 
     for (unsigned long i = 0; i < dwellLimit; i++) {
         if (re * re + im * im > 4.0) return NOT_A_MEMBER;
@@ -65,6 +63,15 @@ char membership(double re, double im) {
             if (obRe == re && obIm == im) return MEMBER;
         }
     }
+    printf("UNDECIDED re: %lf im: %lf - %016llx %016llx\n", cRe, cIm, *(uint64_t *)&cRe, *(uint64_t *)&cIm);
+
+    if (FILE_OUTPUT == 1) {
+        FILE *fp;
+        fp = fopen("log.txt", "a");
+        fprintf(fp, "UNDECIDED re: %lf im: %lf - %016llx %016llx\n", cRe, cIm, *(uint64_t *)&cRe, *(uint64_t *)&cIm);
+        fclose(fp);
+    }
+
     return UNDECIDED;
 }
 
