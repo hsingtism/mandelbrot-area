@@ -1,17 +1,4 @@
-#define dwellLimit 1073741824
-#define updateInvl 67108864
-#define S_SEED 0xade5323c6e74d2fe
-#define FILE_OUTPUT 1
-
-#include <math.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-
-#define MEMBER 0b1
-#define NOT_A_MEMBER 0b10
-#define UNDECIDED 0b100
+#include "mandelbrot-area.h"
 
 // from v8: https://github.com/v8/v8/blob/085fed0fb5c3b0136827b5d7c190b4bd1c23a23e/src/base/utils/random-number-generator.h#L101
 uint64_t state0 = 1;
@@ -32,47 +19,6 @@ double _22(uint64_t i) {
     uint64_t u64 = 0x3FF0000000000000ULL | ((i >> 12) | 1);
     double fmanu = *(double*)&u64 - 1.0;
     return fmanu * 4 - 2; // TODO make percision full 52 bits
-}
-
-char membership(double re, double im) {
-    if (re < -2.0 || re > 0.49) return NOT_A_MEMBER;
-    if (im < -1.15 || im > 1.15 ) return NOT_A_MEMBER;
-    if (re * re + im * im > 4.0) return NOT_A_MEMBER;
-
-    const double cRe = re, cIm = im;
-    double inRe, inIm, pRe, pIm, pobRe;
-    double obRe = re, obIm = im;
-
-    for (unsigned long i = 0; i < dwellLimit; i++) {
-        if (re * re + im * im > 4.0) return NOT_A_MEMBER;
-        if (re != re || im != im) return NOT_A_MEMBER; //NaN
-        if (pRe == re && pIm == im) return MEMBER;  // convergence
-
-        pRe = re;
-        pIm = im;
-        // iterate
-        re = (re + im) * (re - im) + cRe;
-        im = 2 * pRe * im + cIm;
-
-        if (cRe == re && cIm == im) return MEMBER;  // cyclic 
-
-        if (i % 2) { // TODO optimize this
-            pobRe = obRe;
-            obRe = (obRe + obIm) * (obRe - obIm) + cRe;
-            obIm = 2 * pobRe * obIm + cIm;
-            if (obRe == re && obIm == im) return MEMBER;
-        }
-    }
-    printf("UNDECIDED re: %lf im: %lf - %016llx %016llx\n", cRe, cIm, *(uint64_t *)&cRe, *(uint64_t *)&cIm);
-
-    if (FILE_OUTPUT == 1) {
-        FILE *fp;
-        fp = fopen("log.txt", "a");
-        fprintf(fp, "UNDECIDED re: %lf im: %lf - %016llx %016llx\n", cRe, cIm, *(uint64_t *)&cRe, *(uint64_t *)&cIm);
-        fclose(fp);
-    }
-
-    return UNDECIDED;
 }
 
 int main() {
