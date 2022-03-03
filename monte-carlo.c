@@ -23,7 +23,7 @@ double _22(uint64_t i) {
 
 int main() {
     state0 = time(NULL);
-    state1 = time(NULL) ^ S_SEED;
+    state1 = time(NULL) ^ S_SEED; // TODO use urandom when unix
     for (int i = 0; i < 8192; i++) 
         xorshift128plus();
 
@@ -33,7 +33,7 @@ int main() {
 
     FILE *fp;
     fp = fopen("log.txt", "a");
-    fprintf(fp, "instance %lu started\ntimestamp, instance, member, not member, undecided\n", startTime);
+    fprintf(fp, "MONTE CARLO instance %lu started\ntimestamp, instance, member, not member, undecided\n", startTime);
     if (FILE_OUTPUT == 0) fprintf(fp, "file output disabled.\n");
     fclose(fp);
 
