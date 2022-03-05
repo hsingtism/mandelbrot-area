@@ -1,5 +1,11 @@
 #include "mandelbrot-area.h"
 
+#ifdef __unix__
+    #define RNGSEED 1
+#else
+    #define RNGSEED 0
+#endif
+
 // from v8: https://github.com/v8/v8/blob/085fed0fb5c3b0136827b5d7c190b4bd1c23a23e/src/base/utils/random-number-generator.h#L101
 uint64_t state0 = 1;
 uint64_t state1 = 2;
@@ -22,8 +28,28 @@ double _22(uint64_t i) {
 }
 
 int main() {
-    state0 = time(NULL);
-    state1 = time(NULL) ^ S_SEED; // TODO use urandom when unix
+    do {
+        if(RNGSEED) {
+            FILE *randsource;
+            randsource = fopen("/dev/urandom", "r");
+            if (randsource == NULL) {
+                printf("failed to access urandom\n");    
+                break;
+            }
+            fread(&state0, 1, 8, randsource);
+            fread(&state1, 1, 8, randsource);
+            printf("seeded with urandom\n");
+        } else {
+            printf("seeded with system time\n");
+        }
+    } while (0);
+
+    state0 ^= time(NULL);
+    state1 ^= time(NULL) ^ S_SEED;  // TODO use urandom when unix
+
+    printf("PRNG SEED 0: %llx\n", state0);
+    printf("PRNG SEED 1: %llx\n", state1);
+
     for (int i = 0; i < 8192; i++) 
         xorshift128plus();
 
