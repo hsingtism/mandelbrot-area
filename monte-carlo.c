@@ -1,9 +1,9 @@
 #include "mandelbrot-area.h"
 
 #ifdef __unix__
-    #define RNGSEED 1
+#define RNGSEED 1
 #else
-    #define RNGSEED 0
+#define RNGSEED 0
 #endif
 
 // from v8: https://github.com/v8/v8/blob/085fed0fb5c3b0136827b5d7c190b4bd1c23a23e/src/base/utils/random-number-generator.h#L101
@@ -23,34 +23,34 @@ uint64_t xorshift128plus() {
 
 double _22(uint64_t i) {
     uint64_t u64 = 0x3FF0000000000000ULL | ((i >> 12) | 1);
-    double fmanu = *(double*)&u64 - 1.0;
-    return fmanu * 4 - 2; // TODO make percision full 52 bits
+    double fmanu = *(double *)&u64 - 1.0;
+    return fmanu * 4 - 2;  // TODO make percision full 52 bits
+}
+
+void reseed() {
+    uint64_t urs0;
+    uint64_t urs1;
+
+    if (RNGSEED) {
+        FILE *randsource;
+        randsource = fopen("/dev/urandom", "r");
+
+        fread(&urs0, 1, 8, randsource);
+        fread(&urs1, 1, 8, randsource);
+        printf("reseeded with urandom\n");
+    }
+
+    state0 ^= time(NULL) ^ urs0;
+    state1 ^= time(NULL) ^ S_SEED ^ urs1;
 }
 
 int main() {
-    do {
-        if(RNGSEED) {
-            FILE *randsource;
-            randsource = fopen("/dev/urandom", "r");
-            if (randsource == NULL) {
-                printf("failed to access urandom\n");    
-                break;
-            }
-            fread(&state0, 1, 8, randsource);
-            fread(&state1, 1, 8, randsource);
-            printf("seeded with urandom\n");
-        } else {
-            printf("seeded with system time\n");
-        }
-    } while (0);
-
-    state0 ^= time(NULL);
-    state1 ^= time(NULL) ^ S_SEED;  // TODO use urandom when unix
+    reseed();
 
     printf("PRNG SEED 0: %llx\n", state0);
     printf("PRNG SEED 1: %llx\n", state1);
 
-    for (int i = 0; i < 8192; i++) 
+    for (int i = 0; i < 128; i++)
         xorshift128plus();
 
     uint64_t member = 0, notmem = 0, undeci = 0, tested = 0;
@@ -63,7 +63,7 @@ int main() {
     if (FILE_OUTPUT == 0) fprintf(fp, "file output disabled.\n");
     fclose(fp);
 
-    while(1) {
+    while (1) {
         char memdat = membership(_22(xorshift128plus()), _22(xorshift128plus()));
         member += memdat == MEMBER;
         notmem += memdat == NOT_A_MEMBER;
