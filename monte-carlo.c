@@ -22,9 +22,8 @@ uint64_t xorshift128plus() {
 }
 
 double _22(uint64_t i) {
-    uint64_t u64 = 0x3FF0000000000000ULL | ((i >> 12) | 1);
-    double fmanu = *(double *)&u64 - 1.0;
-    return fmanu * 4 - 2;  // TODO make percision full 52 bits
+    uint64_t u64 = 0x4010000000000001ULL | (i >> 12);
+    return *(double *)&u64 - 6.0;
 }
 
 void reseed() {
