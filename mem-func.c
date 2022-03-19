@@ -21,9 +21,16 @@ uint64_t xorshift128plus() {
     return state0 + state1;
 }
 
+// mask to (-2,2] 
 double _22(uint64_t i) {
     uint64_t u64 = 0x4010000000000001ULL | (i >> 12);
     return *(double *)&u64 - 6.0;
+}
+
+// mask to [0,1)
+double _01(uint64_t i) {
+    uint64_t u64 = 0x3FF0000000000000ULL | (i >> 12);
+    return *(double *)&u64 - 1.0;
 }
 
 void reseed() {
