@@ -54,6 +54,7 @@ void reseed() {
 }
 
 char membership(double re, double im) {
+    //test bonds
     if (re < -2.0 || re > 0.49) return NOT_A_MEMBER;
     if (im < -1.15 || im > 1.15) return NOT_A_MEMBER;
     if (re * re + im * im > 4.0) return NOT_A_MEMBER;
@@ -63,9 +64,9 @@ char membership(double re, double im) {
     double obRe = re, obIm = im;
 
     for (unsigned long i = 0; i < dwellLimit; i++) {
-        if (re * re + im * im > 4.0) return NOT_A_MEMBER;
-        if (re != re || im != im) return NOT_A_MEMBER;  // NaN
-        if (pRe == re && pIm == im) return MEMBER;      // convergence
+        if (re * re + im * im > 4.0) return NOT_A_MEMBER; // out of bonds
+        if (re != re || im != im) return NOT_A_MEMBER;    // NaN
+        if (pRe == re && pIm == im) return MEMBER;        // convergence
 
         pRe = re;
         pIm = im;
@@ -75,7 +76,7 @@ char membership(double re, double im) {
 
         if (cRe == re && cIm == im) return MEMBER;  // cyclic
 
-        if (i % 2) {  // TODO optimize this
+        if (i % 2) {  // orbit detection
             pobRe = obRe;
             obRe = (obRe + obIm) * (obRe - obIm) + cRe;
             obIm = 2 * pobRe * obIm + cIm;
