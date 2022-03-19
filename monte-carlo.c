@@ -1,10 +1,8 @@
 #include "mandelbrot-area.h"
 
 int main() {
+    prnginit();
     reseed();
-
-    for (int i = 0; i < 128; i++)
-        xorshift128plus();
 
     uint64_t member = 0, notmem = 0, undeci = 0, tested = 0;
 
@@ -17,7 +15,7 @@ int main() {
     fclose(fp);
 
     while (1) {
-        char memdat = membership(_22(xorshift128plus()), _22(xorshift128plus()));
+        char memdat = membership(_22(), _22());
         member += memdat == MEMBER;
         notmem += memdat == NOT_A_MEMBER;
         undeci += memdat == UNDECIDED;

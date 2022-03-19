@@ -13,6 +13,6 @@
 #define NOT_A_MEMBER 0b10
 #define UNDECIDED 0b100
 char membership(double re, double im);
-uint64_t xorshift128plus();
-double _22(uint64_t i);
+double _22();
 void reseed();
+void prnginit();

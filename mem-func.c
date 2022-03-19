@@ -21,15 +21,20 @@ uint64_t xorshift128plus() {
     return state0 + state1;
 }
 
+void prnginit() {
+    for (int i = 0; i < 128; i++)
+        xorshift128plus();
+}
+
 // mask to (-2,2] 
-double _22(uint64_t i) {
-    uint64_t u64 = 0x4010000000000001ULL | (i >> 12);
+double _22() {
+    uint64_t u64 = 0x4010000000000001ULL | (xorshift128plus() >> 12);
     return *(double *)&u64 - 6.0;
 }
 
 // mask to [0,1)
-double _01(uint64_t i) {
-    uint64_t u64 = 0x3FF0000000000000ULL | (i >> 12);
+double _01() {
+    uint64_t u64 = 0x3FF0000000000000ULL | (xorshift128plus() >> 12);
     return *(double *)&u64 - 1.0;
 }
 
@@ -40,9 +45,9 @@ void reseed() {
     if (RNGSEED) {
         FILE *randsource;
         randsource = fopen("/dev/urandom", "r");
-
         fread(&urs0, 1, 8, randsource);
         fread(&urs1, 1, 8, randsource);
+        fclose(randsource);
         printf("reseeded with urandom\n");
     }
 
@@ -55,8 +60,8 @@ void reseed() {
 
 char membership(double re, double im) {
     //test bonds
-    if (re < -2.0 || re > 0.49) return NOT_A_MEMBER;
     if (im < -1.15 || im > 1.15) return NOT_A_MEMBER;
+    if (re < -2.0 || re > 0.49) return NOT_A_MEMBER;
     if (re * re + im * im > 4.0) return NOT_A_MEMBER;
 
     const double cRe = re, cIm = im;
