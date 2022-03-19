@@ -1,11 +1,5 @@
 #include "mandelbrot-area.h"
 
-#ifdef __unix__
-#define RNGSEED 1
-#else
-#define RNGSEED 0
-#endif
-
 // from v8: https://github.com/v8/v8/blob/085fed0fb5c3b0136827b5d7c190b4bd1c23a23e/src/base/utils/random-number-generator.h#L101
 uint64_t state0 = 1;
 uint64_t state1 = 2;

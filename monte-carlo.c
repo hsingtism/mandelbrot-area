@@ -34,6 +34,8 @@ int main() {
             printf("estimated area L:    %lf\n", (double)(member - undeci) / tested * 16);
             printf("\n");
 
+            if(RNGSEED) reseed();
+
             if (FILE_OUTPUT == 0) continue;
             FILE *fp;
             fp = fopen("log.txt", "a");
