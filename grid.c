@@ -1,8 +1,21 @@
 #include "mandelbrot-area.h"
+#define GRID_LENGTH 256
+#define MAX_DEPTH 3
+
+void evalGrid(double startingRe, double startingIm, double delta, uint32_t* memwr, uint32_t* undeciwr) {
+    uint16_t gridMem = 0, gridundeci = 0;
+    for (int i = 0; i < GRID_LENGTH; i++)
+        for (int r = 0; r < GRID_LENGTH; r++) {
+            char memdat = membership(startingIm + delta * i, startingRe + delta * r);
+            gridMem += memdat == MEMBER;
+            gridundeci += memdat == UNDECIDED;
+        }
+    *memwr = gridMem;
+    *undeciwr = gridundeci;
+    return;
+}
 
 int main() {
-    uint64_t member = 0, notmem = 0, undeci = 0, tested = 0;
-
     const unsigned long startTime = time(NULL);
 
     FILE *fp;
@@ -11,7 +24,24 @@ int main() {
     if (FILE_OUTPUT == 0) fprintf(fp, "file output disabled.\n");
     fclose(fp);
 
-    double wre, wim;
+    uint64_t member = 0, notmem = 0, undeci = 0, tested = 0;
+    double adjtmem = 0, adjtnotmem = 0, adjtundeci = 0;
+
+    double delta[MAX_DEPTH];
+    for (int i = 0; i < MAX_DEPTH; i++) {
+        delta[i] = 4 * 1 / pow(GRID_LENGTH, i);
+    }
+    double res[MAX_DEPTH];
+    for (int i = 0; i < MAX_DEPTH; i++) {
+        res[i] = 4 * 1 / pow(GRID_LENGTH, i * 2);
+    }
+
+    double workingPositionRe[MAX_DEPTH];    
+    double workingPositionIm[MAX_DEPTH];    
+    int workingDepth = 0;
+
+
+
 
     // while (1) {
     //     char memdat = membership(wre, wim);
