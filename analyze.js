@@ -1,3 +1,7 @@
+// the number of decimal places to display 
+// to prevent table from getting too large
+const decimalToShow = 4
+
 // paste last status line of log files instence by instance here
 // each entry should be a string
 const data = [
@@ -90,13 +94,13 @@ estimatedArea.diffToBestEstLLog10 = l(estimatedArea.diffToBestEstL)
 
 for(let i = 0; i < dataTable.length; i++) {
     dataTable[i].totalTested = dataTable[i].mem + dataTable[i].notmem + dataTable[i].undeci 
-    dataTable[i].computationRate = dataTable[i].totalTested / dataTable[i].computationTime 
+    dataTable[i].computationRate = (dataTable[i].totalTested / dataTable[i].computationTime).toFixed(decimalToShow) 
     let estH = 16 * (dataTable[i].mem + dataTable[i].undeci) / dataTable[i].totalTested
     let estL = 16 * dataTable[i].mem / dataTable[i].totalTested
-    dataTable[i].diffToAvgHLog10 = l(estH - estimatedArea.high)
-    dataTable[i].diffToAvgLLog10 = l(estL - estimatedArea.low)
-    dataTable[i].diffToBestAcceptedHLog10 = l(estH - bestExistingEst)
-    dataTable[i].diffToBestAcceptedLLog10 = l(estL - bestExistingEst)
+    dataTable[i].diffToAvgHLog10 = l(estH - estimatedArea.high).toFixed(decimalToShow) + ` ${Math.sign(estH - estimatedArea.high)}`
+    dataTable[i].diffToAvgLLog10 = l(estL - estimatedArea.low).toFixed(decimalToShow) + ` ${Math.sign(estL - estimatedArea.low)}`
+    dataTable[i].diffToBestAcceptedHLog10 = l(estH - bestExistingEst).toFixed(decimalToShow) + ` ${Math.sign(estH - bestExistingEst)}`
+    dataTable[i].diffToBestAcceptedLLog10 = l(estL - bestExistingEst).toFixed(decimalToShow) + ` ${Math.sign(estL - bestExistingEst)}`
 }
 
 console.table(dataTable)
