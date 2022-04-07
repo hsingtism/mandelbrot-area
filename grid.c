@@ -2,11 +2,14 @@
 #define GRID_LENGTH 256
 #define MAX_DEPTH 3
 
-void evalGrid(double startingRe, double startingIm, double delta, uint32_t* memwr, uint32_t* undeciwr) {
+void evalGrid(double startingRe, double startingIm, double delta, uint16_t* memwr, uint16_t* undeciwr) {
     uint16_t gridMem = 0, gridundeci = 0;
     for (int i = 0; i < GRID_LENGTH; i++)
         for (int r = 0; r < GRID_LENGTH; r++) {
-            char memdat = membership(startingIm + delta * i, startingRe + delta * r);
+            char memdat = membership(
+                startingIm + delta * i + delta * _01(), 
+                startingRe + delta * r + delta * _01()
+            );
             gridMem += memdat == MEMBER;
             gridundeci += memdat == UNDECIDED;
         }
@@ -36,12 +39,18 @@ int main() {
         res[i] = 4 * 1 / pow(GRID_LENGTH, i * 2);
     }
 
-    double workingPositionRe[MAX_DEPTH];    
-    double workingPositionIm[MAX_DEPTH];    
-    int workingDepth = 0;
+    double workingPositionRe = -2.0; // end at > 0.49    
+    double workingPositionIm = 0.0;  // end at > 1.15
+    char workingDepth = 0;
 
+    // CALLS SHOULD BE LIKE THIS
+    uint16_t gridEvalMem;
+    uint16_t gridEvalUndeci;
+    evalGrid(workingPositionRe, workingPositionIm, delta[workingDepth], &gridEvalMem, &gridEvalUndeci);
+    // END OF CALL SAMPLE
 
-
+    if (gridEvalMem + gridEvalUndeci == 0) {} // no members
+    if (gridEvalMem == 0xffff) {} // all members
 
     // while (1) {
     //     char memdat = membership(wre, wim);
