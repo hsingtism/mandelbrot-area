@@ -19,5 +19,6 @@
 #define UNDECIDED 0b100
 char membership(double re, double im);
 double _22();
+double _01();
 void reseed();
 void prnginit();

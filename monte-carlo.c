@@ -31,7 +31,7 @@ int main() {
             printf("total actual tested: %llu, %llu\n", tested, member + notmem + undeci, tested);
             printf("rate:                %lf\n", (double)tested / (double)(time(NULL) - startTime));
             printf("estimated area H:    %lf\n", (double)(member + undeci) / tested * 16);
-            printf("estimated area L:    %lf\n", (double)(member - undeci) / tested * 16);
+            printf("estimated area L:    %lf\n", (double)(member         ) / tested * 16);
             printf("\n");
 
             if(RNGSEED) reseed();

@@ -86,7 +86,7 @@ char membership(double re, double im) {
 
     if (FILE_OUTPUT == 1) {
         FILE *fp;
-        fp = fopen("log.txt", "a");
+        fp = fopen("undecided.txt", "a");
         fprintf(fp, "UNDECIDED re: %lf im: %lf - %016llx %016llx\n", cRe, cIm, *(uint64_t *)&cRe, *(uint64_t *)&cIm);
         fclose(fp);
     }
