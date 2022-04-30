@@ -2,6 +2,10 @@
 // to prevent table from getting too large
 const decimalToShow = 4
 
+// the tested area, 16 for monte carlo, 5.727 for simple grid
+// const testedArea = 5.727
+const testedArea = 16
+
 // paste last status line of log files instence by instance here
 // each entry should be a string
 const data = [
@@ -78,8 +82,8 @@ let commonLogTotal = {
 
 
 let estimatedArea = {
-    high : 16 * (sum.totalMember + sum.totalUndecided) / sum.totalTested,
-    low : 16 * sum.totalMember / sum.totalTested
+    high: testedArea * (sum.totalMember + sum.totalUndecided) / sum.totalTested,
+    low: testedArea * sum.totalMember / sum.totalTested
 }
 
 estimatedArea.difference = estimatedArea.high - estimatedArea.low
@@ -95,8 +99,8 @@ estimatedArea.diffToBestEstLLog10 = l(estimatedArea.diffToBestEstL)
 for(let i = 0; i < dataTable.length; i++) {
     dataTable[i].totalTested = dataTable[i].mem + dataTable[i].notmem + dataTable[i].undeci 
     dataTable[i].computationRate = (dataTable[i].totalTested / dataTable[i].computationTime).toFixed(decimalToShow) 
-    let estH = 16 * (dataTable[i].mem + dataTable[i].undeci) / dataTable[i].totalTested
-    let estL = 16 * dataTable[i].mem / dataTable[i].totalTested
+    let estH = testedArea * (dataTable[i].mem + dataTable[i].undeci) / dataTable[i].totalTested
+    let estL = testedArea * dataTable[i].mem / dataTable[i].totalTested
     dataTable[i].diffToAvgHLog10 = l(estH - estimatedArea.high).toFixed(decimalToShow) + ` ${Math.sign(estH - estimatedArea.high)}`
     dataTable[i].diffToAvgLLog10 = l(estL - estimatedArea.low).toFixed(decimalToShow) + ` ${Math.sign(estL - estimatedArea.low)}`
     dataTable[i].diffToBestAcceptedHLog10 = l(estH - bestExistingEst).toFixed(decimalToShow) + ` ${Math.sign(estH - bestExistingEst)}`
