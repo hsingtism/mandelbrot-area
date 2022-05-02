@@ -1,5 +1,5 @@
 #include "mandelbrot-area.h"
-#define GRID_SIZE 1000
+#define GRID_SIZE 65536
 
 int main() {
     reseed();

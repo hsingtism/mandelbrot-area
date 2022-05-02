@@ -6,3 +6,4 @@ comp
 *.bat
 *.txt
 *local.js
+*log
