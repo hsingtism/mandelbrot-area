@@ -21,13 +21,13 @@ void prnginit() {
 }
 
 // mask to (-2,2] 
-double _22() {
+inline double _22() {
     uint64_t u64 = 0x4010000000000001ULL | (xorshift128plus() >> 12);
     return *(double *)&u64 - 6.0;
 }
 
 // mask to [0,1)
-double _01() {
+inline double _01() {
     uint64_t u64 = 0x3FF0000000000000ULL | (xorshift128plus() >> 12);
     return *(double *)&u64 - 1.0;
 }
@@ -51,7 +51,7 @@ void reseed() {
     printf("PRNG SEED 1: %llx\n", state1);
 }
 
-char membership(double re, double im) {
+inline char membership(double re, double im) {
     // test bonds
     if (im < -1.15 || im > 1.15) return NOT_A_MEMBER;
     if (re < -2.0 || re > 0.49) return NOT_A_MEMBER;
