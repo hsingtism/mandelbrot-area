@@ -1,5 +1,5 @@
 #include "mandelbrot-area.h"
-#define GRID_SIZE 65536
+#define GRID_SIZE 4096
 
 int main() {
     reseed();
@@ -15,7 +15,14 @@ int main() {
         uint32_t gRe, gIm;
 
         for (gIm = 0; gIm < GRID_SIZE; gIm++) {
-            for (gRe = 0; gRe < GRID_SIZE; gRe++) {
+            gRe = 0;
+            if (gIm * deltaIm > 0.04) {
+                uint32_t skipcount = GRID_SIZE + (uint32_t)floor(((gIm * deltaIm - 1.32) * 1.5625) / deltaRe);
+                notmem += skipcount;
+                tested += skipcount;
+                gRe = skipcount;
+            }
+            for (; gRe < GRID_SIZE; gRe++) {
                 char memdat = membership(
                     gRe * deltaRe + _01() * deltaRe - 2.0,
                     gIm * deltaIm + _01() * deltaIm);
