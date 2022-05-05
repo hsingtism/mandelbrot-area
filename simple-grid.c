@@ -1,5 +1,6 @@
 #include "mandelbrot-area.h"
-#define GRID_SIZE 65536
+#define GRID_SIZE 100
+#define UPDATE_IM_SCANLINE 64
 
 int main() {
     reseed();
@@ -30,6 +31,9 @@ int main() {
                 notmem += memdat == NOT_A_MEMBER;
                 undeci += memdat == UNDECIDED;
                 tested++;
+            }
+            if (gIm % UPDATE_IM_SCANLINE == 0) {
+                printf("completed %lf. %lf completed\n", gIm * deltaIm, (double)gIm / (double)GRID_SIZE);
             }
         }
         gridTested++;

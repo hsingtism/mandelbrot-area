@@ -1,6 +1,5 @@
 // MODIFY SETTINGS HERE
-#define dwellLimit 1073741824
-#define updateInvl 67108864
+#define dwellLimit 4294967296
 #define S_SEED 0xade5323c6e74d2fe
 #define FILE_OUTPUT 1
 

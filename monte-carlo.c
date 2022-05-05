@@ -1,4 +1,5 @@
 #include "mandelbrot-area.h"
+#define updateInvl 67108864
 
 int main() {
     prnginit();
