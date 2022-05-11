@@ -69,13 +69,14 @@ inline char membership(double re, double im) {
         im = 2 * pRe * im + cIm;
         if (i % 2 || i < 5) {
             if (re * re + im * im > 4.0) return NOT_A_MEMBER;
-            if (fabs(pRe - re) < EQUIVALENCE_THRESHOLD && fabs(pIm - im) < EQUIVALENCE_THRESHOLD) return MEMBER;
+            if (fabs(pRe - re) < C_EQUIVALENCE_THRESHOLD && fabs(pIm - im) < C_EQUIVALENCE_THRESHOLD) return MEMBER;
         }
         if (i % 2) {
             pobRe = obRe;
             obRe = (obRe + obIm) * (obRe - obIm) + cRe;
             obIm = 2 * pobRe * obIm + cIm;
-            if (obRe == re && obIm == im) return MEMBER;
+            // if (obRe == re && obIm == im) return MEMBER;
+            if (fabs(obRe - re) < O_EQUIVALENCE_THRESHOLD && fabs(obIm - im) < O_EQUIVALENCE_THRESHOLD) return MEMBER;
         }
     }
 
