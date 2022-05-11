@@ -1,6 +1,7 @@
 // MODIFY SETTINGS HERE
-#define dwellLimit 4294967296
-#define S_SEED 0xade5323c6e74d2fe
+#define dwellLimit pow(2, 32)
+#define EQUIVALENCE_THRESHOLD pow(2, -16)
+#define S_SEED 0xa6ceb87d4389e4ef
 #define FILE_OUTPUT 1
 
 #ifdef __unix__

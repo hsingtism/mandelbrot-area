@@ -52,8 +52,9 @@ void reseed() {
 }
 
 inline char membership(double re, double im) {
-    if (
-        im < -1.15 || im > 1.15 || re < -2.0 || re > 0.49 || re * re + im * im > 4.0) {
+    if (   im < -1.15 || im > 1.15 
+        || re < -2.0 || re > 0.49 
+        || re * re + im * im > 4.0) {
         return NOT_A_MEMBER;
     }
 
@@ -68,7 +69,7 @@ inline char membership(double re, double im) {
         im = 2 * pRe * im + cIm;
         if (i % 2 || i < 5) {
             if (re * re + im * im > 4.0) return NOT_A_MEMBER;
-            if (pRe == re && pIm == im) return MEMBER;
+            if (fabs(pRe - re) < EQUIVALENCE_THRESHOLD && fabs(pIm - im) < EQUIVALENCE_THRESHOLD) return MEMBER;
         }
         if (i % 2) {
             pobRe = obRe;
