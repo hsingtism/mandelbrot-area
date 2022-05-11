@@ -52,10 +52,10 @@ void reseed() {
 }
 
 inline char membership(double re, double im) {
-    // test bonds
-    if (im < -1.15 || im > 1.15) return NOT_A_MEMBER;
-    if (re < -2.0 || re > 0.49) return NOT_A_MEMBER;
-    if (re * re + im * im > 4.0) return NOT_A_MEMBER;
+    if (
+        im < -1.15 || im > 1.15 || re < -2.0 || re > 0.49 || re * re + im * im > 4.0) {
+        return NOT_A_MEMBER;
+    }
 
     const double cRe = re, cIm = im;
     double pRe, pIm, pobRe;
@@ -64,15 +64,13 @@ inline char membership(double re, double im) {
     for (unsigned long i = 0; i < dwellLimit; i++) {
         pRe = re;
         pIm = im;
-        // iterate
         re = (re + im) * (re - im) + cRe;
         im = 2 * pRe * im + cIm;
-
+        if (i % 2 || i < 5) {
+            if (re * re + im * im > 4.0) return NOT_A_MEMBER;
+            if (pRe == re && pIm == im) return MEMBER;
+        }
         if (i % 2) {
-            if (re * re + im * im > 4.0) return NOT_A_MEMBER;  // out of bonds
-            if (pRe == re && pIm == im) return MEMBER;         // convergence
-
-            // orbit detection
             pobRe = obRe;
             obRe = (obRe + obIm) * (obRe - obIm) + cRe;
             obIm = 2 * pobRe * obIm + cIm;
