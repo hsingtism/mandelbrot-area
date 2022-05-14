@@ -1,5 +1,6 @@
 #include "mandelbrot-area.h"
 #define GRID_SIZE 262144
+#define RESEED_INTERVAL 16
 #define CHECKPOINT_INTERVAL 8192
 
 // FOR RESTARTS ONLY, else set to 0 (gIm to -1)
@@ -38,6 +39,7 @@ int main() {
                 undeci += memdat == UNDECIDED;
                 tested++;
             }
+            if (gIm % RESEED_INTERVAL == 0) reseed();
             if (gIm % CHECKPOINT_INTERVAL == 0) {
                 printf( "TIME%lu;ID%lu;MEM%llu;NOTMEM%llu;UNDECI%llu;TESTED%llu;GIM%lu;GRE%lu\n",
                         (unsigned long)time(NULL), startTime, member, notmem, undeci, tested,
