@@ -75,7 +75,6 @@ inline char membership(double re, double im) {
             pobRe = obRe;
             obRe = (obRe + obIm) * (obRe - obIm) + cRe;
             obIm = 2 * pobRe * obIm + cIm;
-            // if (obRe == re && obIm == im) return MEMBER;
             if (fabs(obRe - re) < O_EQUIVALENCE_THRESHOLD && fabs(obIm - im) < O_EQUIVALENCE_THRESHOLD) return MEMBER;
         }
     }
