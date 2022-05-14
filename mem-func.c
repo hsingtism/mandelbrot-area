@@ -41,7 +41,6 @@ void reseed() {
         fread(&urs0, 1, 8, randsource);
         fread(&urs1, 1, 8, randsource);
         fclose(randsource);
-        printf("reseeded with urandom\n");
     }
 
     state0 ^= time(NULL) ^ urs0;

@@ -1,4 +1,4 @@
-#include "mandelbrot-area.h"
+#include "../mandelbrot-area.h"
 
 int main() {
     clock_t begin = clock();
