@@ -17,6 +17,7 @@
     #define RNGSEED 0
 #endif
 void reseed();
+void inspectPRNGstate(); 
 void prnginit();
 double _22();
 double _01();

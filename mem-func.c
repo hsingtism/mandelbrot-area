@@ -46,7 +46,9 @@ void reseed() {
 
     state0 ^= time(NULL) ^ urs0;
     state1 ^= time(NULL) ^ S_SEED ^ urs1;
+}
 
+void inspectPRNGstate() {
     printf("PRNG SEED 0: %llx\n", state0);
     printf("PRNG SEED 1: %llx\n", state1);
 }

@@ -3,6 +3,7 @@
 
 int main() {
     prnginit();
+    inspectPRNGstate();
     reseed();
 
     uint64_t member = 0, notmem = 0, undeci = 0, tested = 0;

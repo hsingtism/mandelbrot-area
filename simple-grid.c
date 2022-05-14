@@ -14,8 +14,10 @@
 
 int main() {
     reseed();
-    prnginit();    
-
+    inspectPRNGstate();
+    prnginit();
+    inspectPRNGstate(); 
+    
     unsigned long gridTested = 0;
     const double deltaRe = 2.49 / GRID_SIZE;
     const double deltaIm = 1.15 / GRID_SIZE;
