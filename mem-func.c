@@ -63,7 +63,7 @@ inline char membership(double re, double im) {
     double pRe, pIm, pobRe;
     double obRe = re, obIm = im;
 
-    for (unsigned long i = 0; i < dwellLimit; i++) {
+    for (uint64_t i = 0; i < dwellLimit; i++) {
         pRe = re;
         pIm = im;
         re = (re + im) * (re - im) + cRe;

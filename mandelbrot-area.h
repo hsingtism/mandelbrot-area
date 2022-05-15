@@ -1,5 +1,5 @@
 // MODIFY SETTINGS HERE
-#define dwellLimit pow(2, 32)
+#define dwellLimit 0x0000000400000000
 #define C_EQUIVALENCE_THRESHOLD pow(2, -16)
 #define O_EQUIVALENCE_THRESHOLD pow(2, -32)
 #define S_SEED 0xa6ceb87d4389e4ef

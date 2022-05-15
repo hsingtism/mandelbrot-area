@@ -59,9 +59,6 @@ int main() {
 
         printf("GRID DONE %llu points tested; grid number %lu\n", tested, gridTested);
         printf("times:               %llu %llu\n", startTime, time(NULL));
-        printf("total time:          %llu\n", time(NULL) - startTime);
-        printf("total actual tested: %llu, %llu\n", tested, member + notmem + undeci, tested);
-        printf("rate:                %lf\n", (double)tested / (double)(time(NULL) - startTime));
         printf("estimated area H:    %lf\n", (double)(member + undeci) / tested * 5.727);
         printf("estimated area L:    %lf\n", (double)(member         ) / tested * 5.727);
         printf("\n");
