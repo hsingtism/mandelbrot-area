@@ -116,9 +116,11 @@ let stdDev = {
     StandardDeviationH: Math.sqrt(diffFromAvgSqurSumH / sdMeansH.length),
     StandardDeviationL: Math.sqrt(diffFromAvgSqurSumL / sdMeansL.length),
 }
-stdDev.HLog10 = l(stdDev.StandardDeviationH),
-    stdDev.LLog10 = l(stdDev.StandardDeviationL)
+stdDev.HLog10 = l(stdDev.StandardDeviationH)
+stdDev.LLog10 = l(stdDev.StandardDeviationL)
 
+stdDev._95SEM_H = stdDev.StandardDeviationH * 1.96 / Math.sqrt(commonLogTotal.instanceNum.value)
+stdDev._95SEM_L = stdDev.StandardDeviationL * 1.96 / Math.sqrt(commonLogTotal.instanceNum.value)
 
 console.table(dataTable)
 console.table(commonLogTotal)
