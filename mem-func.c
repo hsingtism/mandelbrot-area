@@ -52,11 +52,33 @@ void inspectPRNGstate() {
     printf("PRNG SEED 1: %llx\n", state1);
 }
 
+// extract the first bit of a double
+char fsgn(double x) {
+    return (char)((*(uint64_t *)&x) >> 63);
+}
+
 inline char membership(double re, double im) {
     if (   im < -1.15 || im > 1.15 
         || re < -2.0 || re > 0.49 
         || re * re + im * im > 4.0) {
         return NOT_A_MEMBER;
+    }
+
+    // https://www.desmos.com/calculator/rmldovq5x5
+    // testing main cardioid and main bulb
+    if (re > -1.25 && re < -0.75 && im < 0.25) {
+        const double xp1 = re + 1;
+        if (fsgn(xp1 * xp1 + im * im - 0.0625)) {
+            return MEMBER;
+        }
+    } else if (re > -0.75 && re < 0.375 && im < 0.65) {
+        const double y2 = im * im;
+        const double adjx = re - 0.25;
+        const double adjx2py2 = adjx * adjx + y2;
+        const double firstterm = adjx2py2 + 2 * 0.25 * adjx;
+        if (fsgn(firstterm * firstterm - 0.25 * adjx2py2)) {
+            return MEMBER;
+        }
     }
 
     const double cRe = re, cIm = im;
