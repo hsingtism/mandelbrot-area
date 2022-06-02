@@ -1,6 +1,6 @@
 #include "mandelbrot-area.h"
 
-// from v8: https://github.com/v8/v8/blob/085fed0fb5c3b0136827b5d7c190b4bd1c23a23e/src/base/utils/random-number-generator.h#L101
+// from v8: https://github.com/v8/v8/blob/main/src/base/utils/random-number-generator.h#L119
 uint64_t state0 = 1;
 uint64_t state1 = 2;
 uint64_t xorshift128plus() {
@@ -72,9 +72,8 @@ inline char membership(double re, double im) {
             return MEMBER;
         }
     } else if (re > -0.75 && re < 0.375 && im < 0.65) {
-        const double y2 = im * im;
         const double adjx = re - 0.25;
-        const double adjx2py2 = adjx * adjx + y2;
+        const double adjx2py2 = adjx * adjx + im * im;
         const double firstterm = adjx2py2 + 2 * 0.25 * adjx;
         if (fsgn(firstterm * firstterm - 0.25 * adjx2py2)) {
             return MEMBER;
@@ -88,13 +87,12 @@ inline char membership(double re, double im) {
     for (uint64_t i = 0; i < dwellLimit; i++) {
         pRe = re;
         pIm = im;
-        re = (re + im) * (re - im) + cRe;
-        im = 2 * pRe * im + cIm;
-        if (i % 2 || i < 5) {
+        re = re * re - im * im + cRe;
+        im = 2.0 * pRe * im + cIm;
+        if (i % 2) {
             if (re * re + im * im > 4.0) return NOT_A_MEMBER;
             if (fabs(pRe - re) < C_EQUIVALENCE_THRESHOLD && fabs(pIm - im) < C_EQUIVALENCE_THRESHOLD) return MEMBER;
-        }
-        if (i % 2) {
+
             pobRe = obRe;
             obRe = (obRe + obIm) * (obRe - obIm) + cRe;
             obIm = 2 * pobRe * obIm + cIm;
