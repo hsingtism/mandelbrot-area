@@ -40,7 +40,7 @@ for (let i = 0; i < data.length; i++) {
     let compTime = eline[0] - eline[1]
     dataTable[i] = {
         id: eline[1],
-        computationTime: compTime,
+        time: compTime,
         mem: eline[2],
         notmem: eline[3],
         undeci: eline[4]
@@ -86,13 +86,13 @@ let sdMeansL = []
 
 for (let i = 0; i < dataTable.length; i++) {
     dataTable[i].totalTested = dataTable[i].mem + dataTable[i].notmem + dataTable[i].undeci
-    dataTable[i].computationRate = (dataTable[i].totalTested / dataTable[i].computationTime).toFixed(decimalToShow)
+    dataTable[i].computationRate = (dataTable[i].totalTested / dataTable[i].time).toFixed(decimalToShow)
     let estH = testedArea * (dataTable[i].mem + dataTable[i].undeci) / dataTable[i].totalTested
     let estL = testedArea * dataTable[i].mem / dataTable[i].totalTested
     dataTable[i].diffToAvgHLog10 = l(estH - estimatedArea.high).toFixed(decimalToShow) + ` ${Math.sign(estH - estimatedArea.high)}`
     dataTable[i].diffToAvgLLog10 = l(estL - estimatedArea.low).toFixed(decimalToShow) + ` ${Math.sign(estL - estimatedArea.low)}`
-    dataTable[i].diffToBestAcceptedHLog10 = l(estH - bestExistingEst).toFixed(decimalToShow) + ` ${Math.sign(estH - bestExistingEst)}`
-    dataTable[i].diffToBestAcceptedLLog10 = l(estL - bestExistingEst).toFixed(decimalToShow) + ` ${Math.sign(estL - bestExistingEst)}`
+    dataTable[i].dBAHLog10 = l(estH - bestExistingEst).toFixed(decimalToShow) + ` ${Math.sign(estH - bestExistingEst)}`
+    dataTable[i].dBALLog10 = l(estL - bestExistingEst).toFixed(decimalToShow) + ` ${Math.sign(estL - bestExistingEst)}`
     sdMeansH.push(estH)
     sdMeansL.push(estL)
 }
