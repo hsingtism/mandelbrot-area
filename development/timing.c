@@ -5,7 +5,7 @@ int main() {
 
     prnginit();
     uint64_t sum = 0;
-    for (uint32_t i = 0; i < 5000000; i++) {
+    for (uint32_t i = 0; i < 10000000; i++) {
         sum += membership(
             _01() * 2.49 - 2.0,
             _01() * 1.15);

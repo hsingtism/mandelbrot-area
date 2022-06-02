@@ -53,7 +53,7 @@ void inspectPRNGstate() {
 }
 
 // extract the first bit of a double
-char fsgn(double x) {
+char fneg(double x) {
     return (char)((*(uint64_t *)&x) >> 63);
 }
 
@@ -68,14 +68,14 @@ inline char membership(double re, double im) {
     // testing main cardioid and main bulb
     if (re > -1.25 && re < -0.75 && im < 0.25) {
         const double xp1 = re + 1;
-        if (fsgn(xp1 * xp1 + im * im - 0.0625)) {
+        if (fneg(xp1 * xp1 + im * im - 0.0625)) {
             return MEMBER;
         }
     } else if (re > -0.75 && re < 0.375 && im < 0.65) {
         const double adjx = re - 0.25;
         const double adjx2py2 = adjx * adjx + im * im;
         const double firstterm = adjx2py2 + 2 * 0.25 * adjx;
-        if (fsgn(firstterm * firstterm - 0.25 * adjx2py2)) {
+        if (fneg(firstterm * firstterm - 0.25 * adjx2py2)) {
             return MEMBER;
         }
     }
@@ -89,12 +89,13 @@ inline char membership(double re, double im) {
         pIm = im;
         re = re * re - im * im + cRe;
         im = 2.0 * pRe * im + cIm;
-        if (i % 2) {
+        if (i % 5 == 1) {
             if (re * re + im * im > 4.0) return NOT_A_MEMBER;
             if (fabs(pRe - re) < C_EQUIVALENCE_THRESHOLD && fabs(pIm - im) < C_EQUIVALENCE_THRESHOLD) return MEMBER;
-
+        }
+        if (i % 2) {
             pobRe = obRe;
-            obRe = (obRe + obIm) * (obRe - obIm) + cRe;
+            obRe = obRe * obRe - obIm * obIm + cRe;
             obIm = 2 * pobRe * obIm + cIm;
             if (fabs(obRe - re) < O_EQUIVALENCE_THRESHOLD && fabs(obIm - im) < O_EQUIVALENCE_THRESHOLD) return MEMBER;
         }
