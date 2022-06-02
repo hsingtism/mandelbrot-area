@@ -66,12 +66,12 @@ inline char membership(double re, double im) {
 
     // https://www.desmos.com/calculator/rmldovq5x5
     // testing main cardioid and main bulb
-    if (re > -1.25 && re < -0.75 && im < 0.25) {
+    if (im < 0.25 && re < -0.75 && re > -1.25) {
         const double xp1 = re + 1;
         if (fneg(xp1 * xp1 + im * im - 0.0625)) {
             return MEMBER;
         }
-    } else if (re > -0.75 && re < 0.375 && im < 0.65) {
+    } else if (re > -0.75 && im < 0.65 && re < 0.375) {
         const double adjx = re - 0.25;
         const double adjx2py2 = adjx * adjx + im * im;
         const double firstterm = adjx2py2 + 2 * 0.25 * adjx;
