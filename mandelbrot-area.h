@@ -22,7 +22,5 @@ void prnginit();
 double _22();
 double _01();
 
-#define MEMBER 0b1
-#define NOT_A_MEMBER 0b10
-#define UNDECIDED 0b100
+enum pointState{MEMBER, NOT_A_MEMBER, UNDECIDED};
 char membership(double re, double im);
