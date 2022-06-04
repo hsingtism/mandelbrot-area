@@ -8,3 +8,5 @@ comp
 *local.js
 *log
 *logcc
+*.exp
+*.lib
