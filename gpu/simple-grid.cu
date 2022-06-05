@@ -16,16 +16,21 @@
 #define RNGSEED 0
 #endif
 
-enum pointState { MEMBER,
+enum pointState { reservedForError, //errors will tend to have zeros
+                  MEMBER,           //only defined for function return, be careful to context
                   NOT_A_MEMBER,
                   UNDECIDED,
-                  OUT_OF_RANGE,
-                  PUSH_TO_CPU };
-char membership(double re, double im);
+                  OUT_OF_RANGE };
 
-#define GRID_SIZE 262144
-#define PARALLEL_SIZE 100
-#define POINTS_PER_CUDA_THREAD 1000
+#define GRID_SIZE 8192
+#define CUDA_GRID_COUNT 128
+#define CUDA_THREAD_COUNT 512
+#define POINTS_PER_CUDA_THREAD 512
+#define DEVICE_ITERS 512
+
+#define PARALLEL_SIZE CUDA_THREAD_COUNT * CUDA_GRID_COUNT
+__managed__ double deltaRe = 2.49 / GRID_SIZE;
+__managed__ double deltaIm = 1.15 / GRID_SIZE;
 
 // from v8: https://github.com/v8/v8/blob/main/src/base/utils/random-number-generator.h#L119
 uint64_t state0 = 1;
@@ -42,7 +47,7 @@ uint64_t xorshift128plus() {
     return state0 + state1;
 }
 
-void xorshift128plusCUDA(uint64_t* state0, uint64_t* state1, uint64_t* result) {
+__device__ void xorshift128plusCUDA(uint64_t* state0, uint64_t* state1, uint64_t* result) {
     uint64_t s1 = *state0;
     uint64_t s0 = *state1;
     *state0 = s0;
@@ -62,6 +67,11 @@ void prnginit() {
 // mask to [0,1)
 inline double _01() {
     uint64_t u64 = 0x3FF0000000000000ULL | (xorshift128plus() >> 12);
+    return *(double*)&u64 - 1.0;
+}
+
+__device__ double _01MaskOnly(uint64_t src) {
+    uint64_t u64 = 0x3FF0000000000000ULL | (src >> 12);
     return *(double*)&u64 - 1.0;
 }
 
@@ -86,11 +96,11 @@ void inspectPRNGstate() {
 }
 
 // extract the first bit of a double
-char fneg(double x) {
+__device__ __host__ char fneg(double x) {
     return (char)((*(uint64_t*)&x) >> 63);
 }
 
-inline char membershipt(double re, double im, uint64_t numiters) {
+__device__ __host__ char membershipt(double re, double im, uint64_t numiters) {
     if (im < -1.15 || im > 1.15 || re < -2.0 || re > 0.49 || re * re + im * im > 4.0) {
         return NOT_A_MEMBER;
     }
@@ -136,14 +146,32 @@ inline char membershipt(double re, double im, uint64_t numiters) {
 }
 
 __global__ void membershipKernel(uint64_t startPos, uint32_t threadLoopLength, char* resultPtr) {
-    int threadId = 0; // TODO thread index
-    for(int i = 0; i < threadLoopLength; i++) {
+    const int threadId = blockIdx.x * CUDA_GRID_COUNT + threadIdx.x; 
+    const int resultIndexStart = threadId * POINTS_PER_CUDA_THREAD;
 
+    uint64_t prngState0 = startPos + resultIndexStart;
+    uint64_t prngState1 = (startPos + resultIndexStart) << 32;
+    uint64_t prngresRe = 0;
+    uint64_t prngresIm = 0;
+
+    for(int i = 0; i < threadLoopLength; i++) {
+        if(startPos + threadLoopLength > GRID_SIZE * GRID_SIZE) {
+            resultPtr[resultIndexStart + i] = OUT_OF_RANGE;
+            continue;
+        }
+        xorshift128plusCUDA(&prngState0, &prngState1, &prngresRe);
+        xorshift128plusCUDA(&prngState0, &prngState1, &prngresIm);
+        resultPtr[resultIndexStart + i] = membershipt(
+            ((startPos + resultIndexStart + i) % GRID_SIZE) + _01MaskOnly(prngresRe) * deltaRe,
+            ((startPos + resultIndexStart + i) / GRID_SIZE) + _01MaskOnly(prngresIm) * deltaIm,
+            DEVICE_ITERS);
     }
 }
 
-void cudamanagement(uint64_t startPos, uint32_t threadLoopLength, uint32_t parallelSize, char* resultPtr) {
-    // TODO call kernel here
+void cudamanagement(uint64_t startPos, uint32_t threadLoopLength, char* resultPtr) {
+    membershipKernel<<<CUDA_GRID_COUNT,CUDA_THREAD_COUNT>>>(
+        startPos, threadLoopLength, resultPtr
+    );
 }
 
 int main(int argc, char** argv) {
@@ -153,13 +181,15 @@ int main(int argc, char** argv) {
     inspectPRNGstate();
 
     unsigned long gridTested = 0;
-    const double deltaRe = 2.49 / GRID_SIZE;
-    const double deltaIm = 1.15 / GRID_SIZE;
 
     const uint64_t totalPointCount = GRID_SIZE * GRID_SIZE;
-    uint64_t prngseed0[PARALLEL_SIZE];
-    uint64_t prngseed1[PARALLEL_SIZE];
-    char result[PARALLEL_SIZE * POINTS_PER_CUDA_THREAD];
+
+    char* result;
+    char* result_d;
+
+    result = (char *)malloc(PARALLEL_SIZE * POINTS_PER_CUDA_THREAD);
+    cudaMalloc((void **)&result_d, PARALLEL_SIZE * POINTS_PER_CUDA_THREAD);
+
     double cpuQueueRe[PARALLEL_SIZE * POINTS_PER_CUDA_THREAD];
     double cpuQueueIm[PARALLEL_SIZE * POINTS_PER_CUDA_THREAD];
 
@@ -171,18 +201,38 @@ int main(int argc, char** argv) {
                  tested = 0;
 
         for (uint64_t position = 0; position < totalPointCount; position += PARALLEL_SIZE * POINTS_PER_CUDA_THREAD) {
-            reseed();
-            for (uint32_t i = 0; i < PARALLEL_SIZE; i++) {
-                prngseed0[i] = xorshift128plus();
-                prngseed1[i] = xorshift128plus();
-            }
+            cudamanagement(position, POINTS_PER_CUDA_THREAD, result_d);
+            cudaMemcpy(result, result_d, PARALLEL_SIZE * POINTS_PER_CUDA_THREAD, cudaMemcpyDeviceToHost);
 
-            cudamanagement(position, POINTS_PER_CUDA_THREAD, PARALLEL_SIZE, &result[PARALLEL_SIZE * POINTS_PER_CUDA_THREAD]);
+            uint32_t CPUArrayPosition = 0;
 
             for(uint32_t i = 0; i < PARALLEL_SIZE; i++) {
                 char wv = result[i];
-                member += wv == MEMBER;
-                notmem += wv == NOT_A_MEMBER;
+                if(wv == NOT_A_MEMBER) { // no branchless here since some conditions needs to be executed
+                    notmem++;
+                } else if (wv == MEMBER) {
+                    member++;
+                } else if (wv == UNDECIDED) {
+                    if(i == 0) reseed();
+                    cpuQueueIm[CPUArrayPosition] = (position + i) / GRID_SIZE * deltaIm * _01();
+                    cpuQueueRe[CPUArrayPosition] = (position + i) % GRID_SIZE * deltaRe * _01();
+                    CPUArrayPosition++;
+                } else if (wv == OUT_OF_RANGE) {
+                    continue;
+                } else {
+                    printf("unexpected cuda return");
+                }
+            }
+
+            while(CPUArrayPosition--) {
+                char memdat = membershipt(
+                    cpuQueueRe[CPUArrayPosition],
+                    cpuQueueIm[CPUArrayPosition],
+                    dwellLimit
+                );
+                member += memdat == MEMBER;
+                notmem += memdat == NOT_A_MEMBER;
+                undeci += memdat == UNDECIDED;
             }
         }
 
