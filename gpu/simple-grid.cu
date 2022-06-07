@@ -16,7 +16,7 @@
 #define RNGSEED 0
 #endif
 
-enum pointState { reservedForError, //errors will tend to have zeros
+enum pointState { null_p, //errors will tend to have zeros
                   MEMBER,           //only defined for function return, be careful to context
                   NOT_A_MEMBER,
                   UNDECIDED,
@@ -138,8 +138,8 @@ __device__ __host__ char membershipt(double re, double im, uint64_t numiters) {
 }
 
 __global__ void membershipKernel(uint64_t startPos, uint32_t threadLoopLength, char* resultPtr) {
-    const int threadId = blockIdx.x * CUDA_GRID_COUNT + threadIdx.x; 
-    const int resultIndexStart = threadId * POINTS_PER_CUDA_THREAD;
+    const uint32_t threadId = blockDim.x * blockIdx.x + threadIdx.x;
+    const uint32_t resultIndexStart = threadId * POINTS_PER_CUDA_THREAD;
 
     uint64_t prngState0 = startPos + resultIndexStart;
     uint64_t prngState1 = (startPos + resultIndexStart) << 32;
@@ -199,19 +199,22 @@ int main(int argc, char** argv) {
             cudamanagement(position, POINTS_PER_CUDA_THREAD, result_d);
             cudaMemcpy(result, result_d, PARALLEL_SIZE * POINTS_PER_CUDA_THREAD, cudaMemcpyDeviceToHost);
 
-            uint32_t CPUArrayPosition = 0;
+            ptrdiff_t CPUArrayPosition = 0;
             reseed();
 
             for(uint32_t i = 0; i < PARALLEL_SIZE; i++) {
                 char wv = result[i];
+                result[i] = null_p;
                 if(wv == NOT_A_MEMBER) { // no branchless here since some conditions needs to be executed
                     notmem++;
+                    tested++;
                 } else if (wv == MEMBER) {
                     member++;
-                } else if (wv == UNDECIDED || wv == reservedForError) {
+                    tested++;
+                } else if (wv == UNDECIDED) {
                     // cpuQueueIm[CPUArrayPosition] = (position + i) / GRID_SIZE * deltaIm * _01();
                     // cpuQueueRe[CPUArrayPosition] = (position + i) % GRID_SIZE * deltaRe * _01();
-                    // CPUArrayPosition++;
+                    CPUArrayPosition++;
                 } else if (wv == OUT_OF_RANGE) {
                     continue;
                 } else {
@@ -219,16 +222,21 @@ int main(int argc, char** argv) {
                 }
             }
 
-            // while(CPUArrayPosition--) {
-            //     char memdat = membershipt(
-            //         cpuQueueRe[CPUArrayPosition],
-            //         cpuQueueIm[CPUArrayPosition],
-            //         dwellLimit
-            //     );
-            //     member += memdat == MEMBER;
-            //     notmem += memdat == NOT_A_MEMBER;
-            //     undeci += memdat == UNDECIDED;
-            // }
+            while(CPUArrayPosition--) {
+                char memdat = membershipt(
+                    0,
+                    0,
+                    dwellLimit
+                );
+                // char memdat = membershipt(
+                //     cpuQueueRe[CPUArrayPosition],
+                //     cpuQueueIm[CPUArrayPosition],
+                //     dwellLimit
+                // );
+                member += memdat == MEMBER;
+                notmem += memdat == NOT_A_MEMBER;
+                undeci += memdat == UNDECIDED;
+            }
         }
 
         if (FILE_OUTPUT == 0) continue;
