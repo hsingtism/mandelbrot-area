@@ -22,15 +22,17 @@ enum pointState { reservedForError, //errors will tend to have zeros
                   UNDECIDED,
                   OUT_OF_RANGE };
 
-#define GRID_SIZE 8192
+#define GRID_SIZE 131072
 #define CUDA_GRID_COUNT 128
 #define CUDA_THREAD_COUNT 512
 #define POINTS_PER_CUDA_THREAD 512
 #define DEVICE_ITERS 512
 
 #define PARALLEL_SIZE CUDA_THREAD_COUNT * CUDA_GRID_COUNT
-__managed__ double deltaRe = 2.49 / GRID_SIZE;
-__managed__ double deltaIm = 1.15 / GRID_SIZE;
+__device__ const double deltaRe_d = 2.49 / GRID_SIZE;
+const double deltaRe = 2.49 / GRID_SIZE;
+__device__ const double deltaIm_d = 1.15 / GRID_SIZE;
+const double deltaIm = 1.15 / GRID_SIZE;
 
 // from v8: https://github.com/v8/v8/blob/main/src/base/utils/random-number-generator.h#L119
 uint64_t state0 = 1;
@@ -59,11 +61,6 @@ __device__ void xorshift128plusCUDA(uint64_t* state0, uint64_t* state1, uint64_t
     *result = *state0 + *state1;
 }
 
-void prnginit() {
-    for (int i = 0; i < 128; i++)
-        xorshift128plus();
-}
-
 // mask to [0,1)
 inline double _01() {
     uint64_t u64 = 0x3FF0000000000000ULL | (xorshift128plus() >> 12);
@@ -76,8 +73,8 @@ __device__ double _01MaskOnly(uint64_t src) {
 }
 
 void reseed() {
-    uint64_t urs0, urs1;
-
+    uint64_t urs0 = 0, urs1 = 0;
+    
     if (RNGSEED) {
         FILE* randsource;
         randsource = fopen("/dev/urandom", "r");
@@ -88,11 +85,6 @@ void reseed() {
 
     state0 ^= time(NULL) ^ urs0;
     state1 ^= time(NULL) ^ S_SEED ^ urs1;
-}
-
-void inspectPRNGstate() {
-    printf("PRNG SEED 0: %llx\n", state0);
-    printf("PRNG SEED 1: %llx\n", state1);
 }
 
 // extract the first bit of a double
@@ -155,15 +147,15 @@ __global__ void membershipKernel(uint64_t startPos, uint32_t threadLoopLength, c
     uint64_t prngresIm = 0;
 
     for(int i = 0; i < threadLoopLength; i++) {
-        if(startPos + threadLoopLength > GRID_SIZE * GRID_SIZE) {
+        if (startPos + (uint64_t)threadLoopLength > (uint64_t)GRID_SIZE * (uint64_t)GRID_SIZE) {
             resultPtr[resultIndexStart + i] = OUT_OF_RANGE;
             continue;
         }
         xorshift128plusCUDA(&prngState0, &prngState1, &prngresRe);
         xorshift128plusCUDA(&prngState0, &prngState1, &prngresIm);
         resultPtr[resultIndexStart + i] = membershipt(
-            ((startPos + resultIndexStart + i) % GRID_SIZE) + _01MaskOnly(prngresRe) * deltaRe,
-            ((startPos + resultIndexStart + i) / GRID_SIZE) + _01MaskOnly(prngresIm) * deltaIm,
+            ((startPos + resultIndexStart + i) % GRID_SIZE) + _01MaskOnly(prngresRe) * deltaRe_d,
+            ((startPos + resultIndexStart + i) / GRID_SIZE) + _01MaskOnly(prngresIm) * deltaIm_d,
             DEVICE_ITERS);
     }
 }
@@ -176,13 +168,16 @@ void cudamanagement(uint64_t startPos, uint32_t threadLoopLength, char* resultPt
 
 int main(int argc, char** argv) {
     reseed();
-    inspectPRNGstate();
-    prnginit();
-    inspectPRNGstate();
+    printf("PRNG SEED 0: %llx\n", state0);
+    printf("PRNG SEED 1: %llx\n", state1);
+    for (int i = 0; i < 128; i++)
+        xorshift128plus();
+    printf("PRNG SEED 0: %llx\n", state0);
+    printf("PRNG SEED 1: %llx\n", state1);
 
     unsigned long gridTested = 0;
 
-    const uint64_t totalPointCount = GRID_SIZE * GRID_SIZE;
+    const uint64_t totalPointCount = (uint64_t)GRID_SIZE * (uint64_t)GRID_SIZE;
 
     char* result;
     char* result_d;
@@ -205,6 +200,7 @@ int main(int argc, char** argv) {
             cudaMemcpy(result, result_d, PARALLEL_SIZE * POINTS_PER_CUDA_THREAD, cudaMemcpyDeviceToHost);
 
             uint32_t CPUArrayPosition = 0;
+            reseed();
 
             for(uint32_t i = 0; i < PARALLEL_SIZE; i++) {
                 char wv = result[i];
@@ -212,11 +208,10 @@ int main(int argc, char** argv) {
                     notmem++;
                 } else if (wv == MEMBER) {
                     member++;
-                } else if (wv == UNDECIDED) {
-                    if(i == 0) reseed();
-                    cpuQueueIm[CPUArrayPosition] = (position + i) / GRID_SIZE * deltaIm * _01();
-                    cpuQueueRe[CPUArrayPosition] = (position + i) % GRID_SIZE * deltaRe * _01();
-                    CPUArrayPosition++;
+                } else if (wv == UNDECIDED || wv == reservedForError) {
+                    // cpuQueueIm[CPUArrayPosition] = (position + i) / GRID_SIZE * deltaIm * _01();
+                    // cpuQueueRe[CPUArrayPosition] = (position + i) % GRID_SIZE * deltaRe * _01();
+                    // CPUArrayPosition++;
                 } else if (wv == OUT_OF_RANGE) {
                     continue;
                 } else {
@@ -224,16 +219,16 @@ int main(int argc, char** argv) {
                 }
             }
 
-            while(CPUArrayPosition--) {
-                char memdat = membershipt(
-                    cpuQueueRe[CPUArrayPosition],
-                    cpuQueueIm[CPUArrayPosition],
-                    dwellLimit
-                );
-                member += memdat == MEMBER;
-                notmem += memdat == NOT_A_MEMBER;
-                undeci += memdat == UNDECIDED;
-            }
+            // while(CPUArrayPosition--) {
+            //     char memdat = membershipt(
+            //         cpuQueueRe[CPUArrayPosition],
+            //         cpuQueueIm[CPUArrayPosition],
+            //         dwellLimit
+            //     );
+            //     member += memdat == MEMBER;
+            //     notmem += memdat == NOT_A_MEMBER;
+            //     undeci += memdat == UNDECIDED;
+            // }
         }
 
         if (FILE_OUTPUT == 0) continue;
@@ -250,6 +245,7 @@ int main(int argc, char** argv) {
         printf("estimated area L:    %lf\n", (double)(member) / tested * 5.727);
         printf("\n");
     }
-    
+
+    cudaDeviceReset();
     return 0;
 }
