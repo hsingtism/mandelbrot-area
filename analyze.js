@@ -81,9 +81,6 @@ estimatedArea.diffToBestEstHLog10 = l(estimatedArea.diffToBestEstH)
 estimatedArea.diffToBestEstL = bestExistingEst - estimatedArea.low
 estimatedArea.diffToBestEstLLog10 = l(estimatedArea.diffToBestEstL)
 
-let sdMeansH = []
-let sdMeansL = []
-
 for (let i = 0; i < dataTable.length; i++) {
     dataTable[i].totalTested = dataTable[i].mem + dataTable[i].notmem + dataTable[i].undeci
     dataTable[i].computationRate = (dataTable[i].totalTested / dataTable[i].time).toFixed(decimalToShow)
@@ -93,37 +90,7 @@ for (let i = 0; i < dataTable.length; i++) {
     dataTable[i].diffToAvgLLog10 = l(estL - estimatedArea.low).toFixed(decimalToShow) + ` ${Math.sign(estL - estimatedArea.low)}`
     dataTable[i].dBAHLog10 = l(estH - bestExistingEst).toFixed(decimalToShow) + ` ${Math.sign(estH - bestExistingEst)}`
     dataTable[i].dBALLog10 = l(estL - bestExistingEst).toFixed(decimalToShow) + ` ${Math.sign(estL - bestExistingEst)}`
-    sdMeansH.push(estH)
-    sdMeansL.push(estL)
 }
-
-// standard deviation
-let sdOLMeanH = 0
-let sdOLMeanL = 0
-for (let i = 0; i < sdMeansH.length; i++) {
-    sdOLMeanH += sdMeansH[i]
-    sdOLMeanL += sdMeansL[i]
-}
-sdOLMeanH /= sdMeansH.length
-sdOLMeanL /= sdMeansL.length
-let diffFromAvgSqurSumH = 0
-let diffFromAvgSqurSumL = 0
-for (let i = 0; i < sdMeansH.length; i++) {
-    diffFromAvgSqurSumH += Math.pow(sdMeansH[i] - sdOLMeanH, 2)
-    diffFromAvgSqurSumL += Math.pow(sdMeansL[i] - sdOLMeanL, 2)
-}
-let stdDev = {
-    StandardDeviationH: Math.sqrt(diffFromAvgSqurSumH / sdMeansH.length),
-    StandardDeviationL: Math.sqrt(diffFromAvgSqurSumL / sdMeansL.length),
-}
-stdDev.HLog10 = l(stdDev.StandardDeviationH)
-stdDev.LLog10 = l(stdDev.StandardDeviationL)
-
-stdDev._95SEM_H = stdDev.StandardDeviationH * 1.96 / Math.sqrt(commonLogTotal.instanceNum.value)
-stdDev._95SEM_L = stdDev.StandardDeviationL * 1.96 / Math.sqrt(commonLogTotal.instanceNum.value)
 
 console.table(dataTable)
 console.table(commonLogTotal)
-console.table(stdDev)
-console.table(estimatedArea)
-console.timeEnd('took')
